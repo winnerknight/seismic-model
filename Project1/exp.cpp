@@ -94,7 +94,7 @@ int Absorb()
 	for (Ix = 0; Ix < Labs; Ix++)
 	{
 		Abs[Ix] = sqrt(sin((Pai / 2) * (Ix / (Labs - 1))));//2.Absorb Boundary Compute£¿
-		Abs[Nx - Ix - 1 ] = Abs[Ix];
+		Abs[Nx - Ix - 1] = Abs[Ix];
 	}
 	for (Ix = 0; Ix < Nx; Ix++)
 	{
@@ -229,8 +229,8 @@ int PhaseShift()
 	float Wfldr[Nx], Wfldi[Nx];
 	float Kxmax, Dkx, Wmax, Dw;
 	// 1.3 Compute out Dw and Dkx
-	Dkx = (Pai / Dt) / Nt;//13.Sample Invterval of Wave Number?
-	Dw = (Pai / Dx) / Nx;//14.Sample Invterval of Frequency?
+	Dkx = (Pai / Dx) / Nx;//13.Sample Invterval of Wave Number?
+	Dw = (Pai / Dt) / Nt;//14.Sample Invterval of Frequency?
 	// 2.Read in Velocity and Absorbing Boundary
 	if (ReadVlctyAbsb(Vlcty, Absb) != 1) { printf("ReadVlctyAbsb Error"); exit(0); }
 	// 3.Open Initial Wave Field File and Current Wave Field File using In Wave Fied Extrapolating
@@ -265,8 +265,12 @@ int PhaseShift()
 	}
 	///////////////////////////
 	// 5 Close or Remove Data File
-	fclose(fp_Wfld0r); remove("Wfld0r.dat"); fclose(fp_Wfld0i); remove("Wfld0i.dat");
-	fclose(fp_Wfldr); fclose(fp_Wfldi);
+	fclose(fp_Wfld0r); 
+	remove("Wfld0r.dat"); 
+	fclose(fp_Wfld0i); 
+	remove("Wfld0i.dat");
+	fclose(fp_Wfldr);
+	fclose(fp_Wfldi);
 	return(1);
 }
 ///////////////////////////////////////////////////////////////////
@@ -344,20 +348,20 @@ int MoveOneDz(float Wfldr[], float Wfldi[], float Vz, float Dkx, float Dw, int I
 		printf("FFT is error");
 		exit(0);
 	}
-	for (Ikx = 0; Ikx < Nx / 2 + 1; Ikx++) //31.The Loop scope of Storing Wave Field IN Wave Number Domain ?
+	for (Ikx = 0; Ikx < Nkx / 2 + 1; Ikx++) //31.The Loop scope of Storing Wave Field IN Wave Number Domain ?
 	{
 		// 4.2.3.1 Computing Phaseshift Function
 		if (exp_ikzDz(kz, Ikx, Vz, Iw, Dw, Dkx) != 1) { printf("exp_ikzDz is error"); exit(0); }
 		// 4.2.3.2 WaveField multiply Phaseshift Function
 		// Compute WaveField Phaseshift
 		Wfld_r = kz[0] * Wfldr[Ikx] - kz[1] * Wfldi[Ikx];//32. WaveField Phaseshift Computing: Real Part ?
-		Wfld_i = kz[1] * Wfldr[Ikx] - kz[0] * Wfldi[Ikx];//33. WaveField Phaseshift Computing: Imagine Part ?
+		Wfld_i = kz[1] * Wfldr[Ikx] + kz[0] * Wfldi[Ikx];//33. WaveField Phaseshift Computing: Imagine Part ?
 		Wfldr[Ikx] = Wfld_r;
 	    Wfldi[Ikx] = Wfld_i;
-		if (Ikx != 0 && Ikx != Nx / 2)//34.Condition of WaveField conjugate?
+		if (Ikx != 0 && Ikx != Nkx / 2)//34.Condition of WaveField conjugate?
 		{
-			Wfld_r = Wfld_r;//35. WaveField conjugate: Real Part ?
-			Wfld_i = -Wfld_i;//36. WaveField conjugate: Imagine Part ?
+			Wfld_r = kz[0] * Wfldr[Nkx - Ikx] - kz[1] * Wfldi[Nkx - Ikx];//35. WaveField conjugate: Real Part ?
+			Wfld_i = kz[1] * Wfldr[Nkx - Ikx] + kz[0] * Wfldi[Nkx - Ikx];//36. WaveField conjugate: Imagine Part ?
 			Wfldr[Nkx - Ikx] = Wfld_r;
 		    Wfldi[Nkx - Ikx] = Wfld_i;
 		}
@@ -377,11 +381,11 @@ int exp_ikzDz(float eikzdz[], int Ix, float Vc, int Iw, float Dw, float Dkx)
 	float kz;
 	eikzdz[0] = 0.;
 	eikzdz[1] = 0.;
-	kz = sqrt(((Iw*Dw)/Vc)* ((Iw * Dw) / Vc)-(Ix*Dkx)* (Ix * Dkx));//38. Kz computing?
+	kz = sqrt(((Iw * Dw) / Vc) * ((Iw * Dw) / Vc) - (Ix * Dkx) * (Ix * Dkx));//38. Kz computing?
 	if (kz > 0)//39. Condition for Kz?
 	{
 		eikzdz[0] = (float)cos(kz * Dz);//40. Real Part of Exp(-iKzDz)?
-		eikzdz[1] = (float)sin(-kz * Dz);//41. Imagine Part of Exp(-iKzDz)?
+		eikzdz[1] = (float)-sin(kz * Dz);//41. Imagine Part of Exp(-iKzDz)?
 	}
 	return(1);
 }
@@ -412,7 +416,7 @@ int Frqcy2Time()
 				Wfldti[Nw - Iw] = -Wfldti[Iw]; //50. WaveField conjugat: Imagine Part ?
 			}
 		}
-		if (kkfft(Wfldtr, Wfldti, Nw, 0) != 1) //51. FFT or Inverse FFT?
+		if (kkfft(Wfldtr, Wfldti, Nw, 1) != 1) //51. FFT or Inverse FFT?
 		{
 			printf("FFT is error");
 			exit(0);
